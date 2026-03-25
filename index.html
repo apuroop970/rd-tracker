@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RD Tracker">
+<meta name="theme-color" content="#1a2e4a">
+<title>📮 RD Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#1a2e4a;--navy2:#2d4a6a;--red:#c0392b;--gold:#d4a017;--gf:#f0c040;
+  --green:#1a7a4a;--grn2:#27ae60;--orange:#d35400;--blue:#1a6fa8;
+  --purple:#6c3483;--purp2:#8e44ad;
+  --bg:#f0ece2;--surf:#fffdf7;--border:#ddd0b8;--bord2:rgba(221,208,184,.5);
+  --text:#1a2035;--muted:#6b7280;
+  --sh:0 2px 12px rgba(26,46,74,.10);--sh2:0 6px 30px rgba(26,46,74,.16);
+  --st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;padding-top:var(--st);padding-bottom:var(--sb)}
+
+/* SYNC STATUS BAR */
+.syncbar{padding:5px 14px;font-size:.68rem;font-weight:800;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.syncbar.ok{background:rgba(26,122,74,.12);color:var(--green)}
+.syncbar.err{background:rgba(192,57,43,.1);color:var(--red)}
+.syncbar.off{background:rgba(211,84,0,.09);color:var(--orange)}
+.syncbar.cfg{background:rgba(26,46,74,.08);color:var(--navy)}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0}
+
+/* HEADER */
+.hdr{background:linear-gradient(135deg,var(--navy),var(--navy2));padding:11px 16px 8px;flex-shrink:0;box-shadow:var(--sh2)}
+.hdr-row{display:flex;align-items:center;gap:10px}
+.logo{width:40px;height:40px;background:var(--red);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;border:2.5px solid var(--gold);flex-shrink:0}
+.hdr-txt h1{color:#fff;font-size:1.08rem;font-weight:900;line-height:1.1}
+.hdr-txt p{color:var(--gf);font-size:.62rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase}
+.hdr-dt{margin-left:auto;text-align:right;color:rgba(255,255,255,.65);font-size:.62rem;font-weight:700}
+.hdr-dt b{display:block;color:var(--gf);font-size:.8rem}
+.mchips{display:flex;gap:6px;margin-top:8px;overflow-x:auto;padding-bottom:1px;scrollbar-width:none}
+.mchips::-webkit-scrollbar{display:none}
+.mc{padding:4px 12px;border-radius:20px;border:1.5px solid rgba(255,255,255,.22);color:rgba(255,255,255,.5);font-size:.7rem;font-weight:800;cursor:pointer;white-space:nowrap;background:transparent;font-family:'Nunito',sans-serif}
+.mc.on{background:var(--gold);color:var(--navy);border-color:var(--gold)}
+.mc-add{border-style:dashed;color:rgba(255,255,255,.4)}
+
+/* BATCH BAR */
+.bbar{background:var(--navy);display:flex;flex-shrink:0;border-bottom:2.5px solid var(--gold)}
+.bt{flex:1;padding:9px 4px;border:none;background:transparent;font-family:'Nunito',sans-serif;font-size:.7rem;font-weight:800;color:rgba(255,255,255,.4);cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;text-align:center}
+.bt.on{color:#fff;border-bottom-color:var(--gf);background:rgba(255,255,255,.06)}
+.bc{display:inline-block;background:rgba(255,255,255,.14);padding:1px 6px;border-radius:10px;font-size:.62rem;margin-left:3px}
+.bt.on .bc{background:var(--gold);color:var(--navy)}
+
+/* STATS STRIP */
+.sstrip{display:flex;background:var(--surf);border-bottom:1.5px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.sstrip::-webkit-scrollbar{display:none}
+.ss{flex:0 0 auto;min-width:80px;padding:7px 10px;text-align:center;cursor:pointer;border-right:1px solid var(--border);border-bottom:2.5px solid transparent;transition:all .15s}
+.ss:last-child{border-right:none}
+.ss.on,.ss:hover{background:rgba(26,46,74,.04)}
+.ss.on{border-bottom-color:var(--navy)}
+.ss-v{font-size:1.25rem;font-weight:900;line-height:1}
+.ss-l{font-size:.58rem;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-top:2px}
+.sv-all{color:var(--navy)}.sv-miss{color:var(--red)}.sv-up{color:var(--orange)}.sv-paid{color:var(--green)}.sv-post{color:var(--purple)}
+
+/* SEARCH */
+.srch{padding:7px 12px;background:var(--surf);border-bottom:1.5px solid var(--border);flex-shrink:0;display:flex;gap:8px}
+.sw{position:relative;flex:1}
+.sw input{width:100%;padding:8px 12px 8px 34px;border:1.5px solid var(--border);border-radius:10px;font-family:'Nunito',sans-serif;font-size:.88rem;font-weight:600;background:var(--bg);color:var(--text);outline:none}
+.sw input:focus{border-color:var(--navy)}
+.sw::before{content:'🔍';position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:12px;pointer-events:none}
+.srt{padding:0 10px;border:1.5px solid var(--border);border-radius:10px;background:var(--bg);font-family:'Nunito',sans-serif;font-size:.75rem;font-weight:800;color:var(--muted);cursor:pointer;outline:none}
+
+/* MAIN */
+.main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:72px}
+
+/* BANNER */
+.ban{margin:8px 12px;padding:11px 14px;border-radius:12px;border:1.5px solid;font-size:.79rem;font-weight:600;line-height:1.5}
+.ban-a{background:rgba(26,111,168,.07);border-color:rgba(26,111,168,.25);color:#1a5276}
+.ban-b{background:rgba(211,84,0,.07);border-color:rgba(211,84,0,.25);color:#784212}
+
+/* CARDS */
+.card{background:var(--surf);margin:7px 12px;border-radius:14px;border:1.5px solid var(--border);box-shadow:var(--sh);overflow:hidden}
+.card.cm{border-left:4px solid var(--red)}.card.ct{border-left:4px solid var(--gold)}
+.card.cu{border-left:4px solid var(--blue)}.card.cp{border-left:4px solid #e67e22;opacity:.9}
+.card.cdep{border-left:4px solid var(--green);opacity:.82}
+.card.cpo{border-left:4px solid var(--purple)}.card.cf{border-left:4px solid #c8bfa6}
+
+.ctop{padding:11px 13px 7px;display:flex;align-items:flex-start;gap:9px;cursor:pointer}
+.csno{background:var(--bg);border-radius:7px;padding:2px 7px;font-size:.65rem;font-weight:800;color:var(--muted);flex-shrink:0;margin-top:3px}
+.cmain{flex:1;min-width:0}
+.cname{font-size:.92rem;font-weight:900;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cacct{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--muted);margin-top:1px}
+.cright{text-align:right;flex-shrink:0}
+.camt{font-size:1rem;font-weight:900;color:var(--navy);font-family:'JetBrains Mono',monospace}
+.cbadge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:12px;font-size:.63rem;font-weight:800;margin-top:3px;white-space:nowrap}
+.bm{background:rgba(192,57,43,.12);color:var(--red)}.bt2{background:rgba(212,160,23,.18);color:#8a5c00}
+.bu{background:rgba(26,111,168,.10);color:var(--blue)}.bp{background:rgba(211,84,0,.12);color:var(--orange)}
+.bdep{background:rgba(26,122,74,.12);color:var(--green)}
+.bpo{background:rgba(108,52,131,.10);color:var(--purple)}.bf{background:rgba(107,114,128,.09);color:var(--muted)}
+
+.cmeta{padding:0 13px 9px;display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-size:.62rem;font-weight:700;color:var(--muted);background:var(--bg);border-radius:6px;padding:2px 7px}
+.chip.dc{color:var(--orange);background:rgba(211,84,0,.08)}
+.chip.pc{color:var(--green);background:rgba(26,122,74,.08)}
+.chip.nc{color:var(--purple);background:rgba(108,52,131,.08)}
+
+/* ACTION PANEL */
+.cact{display:none;border-top:1px solid var(--border);padding:12px 13px;background:rgba(240,236,226,.45)}
+.cact.open{display:block}
+.albl{font-size:.67rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.arow{display:flex;gap:7px;margin-bottom:8px;flex-wrap:wrap}
+.ab{flex:1;min-width:0;padding:9px 5px;border-radius:10px;border:1.5px solid;font-family:'Nunito',sans-serif;font-size:.76rem;font-weight:800;cursor:pointer;text-align:center;transition:all .15s}
+.ab:active{transform:scale(.97)}
+.ab-cash{background:#eaf8f0;border-color:var(--grn2);color:var(--green)}
+.ab-upi{background:#e8f0fb;border-color:#2471a3;color:#1a5276}
+.ab-dep{background:#fff3e0;border-color:#e67e22;color:var(--orange)}
+.ab-post{background:#f5eef8;border-color:var(--purp2);color:var(--purple)}
+.ab-undo{background:#fdf2f2;border-color:#e74c3c;color:var(--red)}
+.ab.done{opacity:.45;pointer-events:none}
+.ninp{width:100%;padding:8px 11px;border:1.5px solid var(--border);border-radius:10px;font-family:'Nunito',sans-serif;font-size:.83rem;font-weight:600;background:var(--surf);color:var(--text);outline:none;resize:none;margin-top:4px}
+.ninp:focus{border-color:var(--purple)}
+.nsave{margin-top:6px;padding:7px 16px;background:var(--purple);color:#fff;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.78rem;font-weight:800;cursor:pointer}
+
+/* EMPTY */
+.empty{text-align:center;padding:50px 20px;color:var(--muted)}
+.empty .ei{font-size:2.8rem;margin-bottom:8px}
+.empty p{font-weight:700;font-size:.92rem}
+.empty small{font-size:.75rem;display:block;margin-top:4px}
+
+/* BOTTOM NAV */
+.bnav{position:fixed;bottom:0;left:0;right:0;background:var(--surf);border-top:1.5px solid var(--border);display:flex;padding-bottom:var(--sb);box-shadow:0 -3px 16px rgba(0,0,0,.09);z-index:50}
+.nb{flex:1;padding:9px 4px 7px;border:none;background:transparent;font-family:'Nunito',sans-serif;font-size:.58rem;font-weight:800;color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;transition:color .15s}
+.ni{font-size:1.15rem}
+.nb.on{color:var(--navy)}
+
+/* MODALS */
+.mbg{position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:200;display:none;align-items:flex-end;justify-content:center}
+.mbg.open{display:flex}
+.modal{background:var(--surf);border-radius:20px 20px 0 0;width:100%;max-width:600px;padding:20px;padding-bottom:calc(20px + var(--sb));max-height:90vh;overflow-y:auto}
+.mtitle{font-size:1.05rem;font-weight:900;color:var(--navy);margin-bottom:3px}
+.msub{font-size:.78rem;color:var(--muted);font-weight:600;margin-bottom:14px}
+.mcls{float:right;background:var(--bg);border:none;border-radius:8px;padding:4px 10px;font-size:1rem;cursor:pointer;margin-top:-2px}
+
+/* SETUP PANEL inside settings modal */
+.setup-step{background:var(--bg);border-radius:10px;padding:12px 14px;margin-bottom:8px;border:1.5px solid var(--border)}
+.setup-num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:var(--navy);color:#fff;border-radius:50%;font-size:.72rem;font-weight:800;margin-right:8px;flex-shrink:0}
+.setup-row{display:flex;align-items:flex-start;gap:0}
+.setup-txt{font-size:.82rem;font-weight:700;color:var(--text);flex:1}
+.setup-sub{font-size:.72rem;color:var(--muted);font-weight:600;margin-top:3px}
+.inp-field{width:100%;margin-top:8px;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:.8rem;background:var(--surf);color:var(--text);outline:none}
+.inp-field:focus{border-color:var(--navy)}
+.save-cfg{width:100%;margin-top:10px;padding:11px;background:var(--navy);color:#fff;border:none;border-radius:10px;font-family:'Nunito',sans-serif;font-size:.88rem;font-weight:800;cursor:pointer}
+.test-btn{width:100%;margin-top:6px;padding:9px;background:var(--bg);color:var(--navy);border:1.5px solid var(--border);border-radius:10px;font-family:'Nunito',sans-serif;font-size:.82rem;font-weight:800;cursor:pointer}
+
+/* LEDGER & SUMMARY */
+.lcard{background:var(--surf);margin:7px 12px;border-radius:12px;border:1.5px solid var(--border);padding:11px 13px}
+.ldh{font-size:.68rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.lrow{display:flex;align-items:center;gap:9px;padding:5px 0;border-bottom:1px solid var(--bord2,rgba(221,208,184,.5))}
+.lrow:last-child{border-bottom:none}
+.lname{flex:1;font-size:.82rem;font-weight:800;color:var(--navy)}
+.lamt{font-family:'JetBrains Mono',monospace;font-size:.82rem;font-weight:700;color:var(--green)}
+.lmode{font-size:.65rem;background:var(--bg);padding:2px 7px;border-radius:6px;font-weight:700;color:var(--muted)}
+.lsync{font-size:.6rem;color:var(--green);margin-left:4px}
+
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.sbox{background:var(--surf);border-radius:12px;padding:13px;border:1.5px solid var(--border);text-align:center}
+.sbox-v{font-size:1.4rem;font-weight:900;margin:4px 0}
+.sbox-l{font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+.sline{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--bord2,rgba(221,208,184,.5))}
+.sline:last-child{border-bottom:none}
+.sline-l{font-size:.83rem;font-weight:700}
+.sline-v{font-size:.92rem;font-weight:900;font-family:'JetBrains Mono',monospace}
+
+/* INSTALL BAR */
+.ibar{background:var(--navy);padding:9px 14px;display:flex;align-items:center;gap:9px;flex-shrink:0}
+.ibar p{color:#fff;font-size:.78rem;font-weight:700;flex:1}
+.ibar button{padding:6px 13px;background:var(--gold);border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.76rem;font-weight:800;color:var(--navy);cursor:pointer}
+.ix{background:transparent!important;color:rgba(255,255,255,.4)!important;font-size:.68rem;padding:3px}
+
+/* UPLOAD */
+.udrop{border:2px dashed var(--border);border-radius:12px;padding:22px 16px;text-align:center;cursor:pointer;transition:all .2s}
+.udrop:hover{border-color:var(--navy);background:rgba(26,46,74,.04)}
+.udrop input{display:none}
+.htitle{font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin:12px 0 6px}
+.hrow{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg);border-radius:10px;margin-bottom:5px}
+.hname{font-size:.83rem;font-weight:800;color:var(--navy)}
+.hmeta{font-size:.68rem;color:var(--muted);font-weight:600}
+.hdel{margin-left:auto;background:none;border:none;font-size:.9rem;cursor:pointer;opacity:.35}
+.hdel:hover{opacity:1}
+</style>
+</head>
+<body>
+
+<div class="ibar" id="ibar" style="display:none">
+  <span style="font-size:1.1rem">📲</span>
+  <p>Save to Home Screen — use like an app!</p>
+  <button id="ibtn">Add to Home</button>
+  <button class="ix" onclick="document.getElementById('ibar').style.display='none'">✕</button>
+</div>
+
+<!-- SYNC STATUS -->
+<div class="syncbar cfg" id="syncbar">
+  <div class="sync-dot"></div>
+  <span id="syncmsg">Checking sync setup…</span>
+  <button onclick="openSettings()" style="margin-left:auto;background:transparent;border:none;font-size:.68rem;font-weight:800;cursor:pointer;color:inherit;text-decoration:underline">Setup</button>
+</div>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-row">
+    <div class="logo">📮</div>
+    <div class="hdr-txt"><h1>RD Tracker</h1><p>India Post · Recurring Deposit</p></div>
+    <div class="hdr-dt"><div id="hd-date">—</div><b id="hd-half">—</b></div>
+  </div>
+  <div class="mchips" id="mchips"></div>
+</div>
+
+<!-- BATCH BAR -->
+<div class="bbar">
+  <button class="bt" id="bt-a" onclick="setBatch('a')">📘 Batch 1<br><small style="opacity:.65;font-size:.58rem">1st–15th</small> <span class="bc" id="bc-a">0</span></button>
+  <button class="bt" id="bt-b" onclick="setBatch('b')">📙 Batch 2<br><small style="opacity:.65;font-size:.58rem">16th–End</small> <span class="bc" id="bc-b">0</span></button>
+  <button class="bt" id="bt-all" onclick="setBatch('all')">📋 All <span class="bc" id="bc-all">0</span></button>
+</div>
+
+<!-- STATS -->
+<div class="sstrip">
+  <div class="ss on" id="ss-all" onclick="setSF('all')"><div class="ss-v sv-all" id="sv-all">0</div><div class="ss-l">Total</div></div>
+  <div class="ss" id="ss-miss" onclick="setSF('miss')"><div class="ss-v sv-miss" id="sv-miss">0</div><div class="ss-l">⛔ Missed</div></div>
+  <div class="ss" id="ss-up" onclick="setSF('up')"><div class="ss-v sv-up" id="sv-up">0</div><div class="ss-l">⏳ Due Soon</div></div>
+  <div class="ss" id="ss-paid" onclick="setSF('paid')"><div class="ss-v sv-paid" id="sv-paid">0</div><div class="ss-l">💰 Collected</div></div>
+  <div class="ss" id="ss-dep" onclick="setSF('dep')"><div class="ss-v sv-paid" id="sv-dep">0</div><div class="ss-l">🏛️ Deposited</div></div>
+  <div class="ss" id="ss-post" onclick="setSF('post')"><div class="ss-v sv-post" id="sv-post">0</div><div class="ss-l">📅 Postponed</div></div>
+</div>
+
+<!-- SEARCH -->
+<div class="srch">
+  <div class="sw"><input type="search" id="qbox" placeholder="Search name or account…" oninput="render()"></div>
+  <select class="srt" id="sortSel" onchange="render()">
+    <option value="sno">S.No</option>
+    <option value="due">Due Date</option>
+    <option value="amt">Amount ↓</option>
+    <option value="az">Name A–Z</option>
+  </select>
+</div>
+
+<!-- MAIN -->
+<div class="main" id="main"><div class="empty"><div class="ei">📂</div><p>Loading…</p></div></div>
+
+<!-- BOTTOM NAV -->
+<div class="bnav">
+  <button class="nb on" id="nav-home" onclick="setView('home')"><span class="ni">🏠</span>Home</button>
+  <button class="nb" id="nav-led" onclick="setView('led')"><span class="ni">📒</span>Ledger</button>
+  <button class="nb" id="nav-up" onclick="openUpload()"><span class="ni">📂</span>Add Sheet</button>
+  <button class="nb" id="nav-sum" onclick="setView('sum')"><span class="ni">📊</span>Summary</button>
+  <button class="nb" id="nav-cfg" onclick="openSettings()"><span class="ni">⚙️</span>Sync</button>
+</div>
+
+<!-- UPLOAD MODAL -->
+<div class="mbg" id="uploadModal">
+  <div class="modal">
+    <button class="mcls" onclick="closeUpload()">✕</button>
+    <div class="mtitle">📂 Add / Switch Month</div>
+    <div class="msub">Each month is saved separately. All payment records are kept forever.</div>
+    <label class="udrop">
+      <input type="file" accept=".csv" onchange="handleFile(this.files[0])">
+      <div style="font-size:2rem;margin-bottom:6px">📊</div>
+      <div style="font-size:.88rem;font-weight:700;color:var(--navy)">Tap to select CSV file</div>
+      <div style="font-size:.72rem;color:var(--muted);margin-top:3px">Export your Excel sheet as CSV first</div>
+    </label>
+    <div style="margin-top:10px;padding:11px;background:var(--bg);border-radius:10px">
+      <div style="font-size:.7rem;font-weight:800;color:var(--muted);margin-bottom:5px">📋 OR PASTE CSV DATA</div>
+      <div style="font-size:.65rem;color:var(--muted);margin-bottom:5px">Columns: S.No, Account No, Name, Amount, Months Paid, Open Date, Due Date</div>
+      <textarea id="csvbox" rows="4" style="width:100%;padding:7px;border:1.5px solid var(--border);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:.7rem;resize:vertical" placeholder="1,20001617225,NANDIGAM BRAMARAMBA,2000,62,2021-01-20,2026-04-20"></textarea>
+      <div style="display:flex;gap:8px;margin-top:6px">
+        <button onclick="handleCSV()" style="flex:1;padding:8px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.78rem;font-weight:800;cursor:pointer">Load This Data</button>
+        <button onclick="exportBackup()" style="flex:1;padding:8px;background:var(--bg);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;font-family:'Nunito',sans-serif;font-size:.78rem;font-weight:800;cursor:pointer">💾 Export Backup</button>
+      </div>
+    </div>
+    <div id="shist"></div>
+  </div>
+</div>
+
+<!-- SETTINGS / SYNC MODAL -->
+<div class="mbg" id="settingsModal">
+  <div class="modal">
+    <button class="mcls" onclick="closeSettings()">✕</button>
+    <div class="mtitle">⚙️ Google Sheets Sync Setup</div>
+    <div class="msub">Connect once — then Dad's notes and payments are backed up automatically. Works across all 4 phones.</div>
+
+    <div class="setup-step">
+      <div class="setup-row">
+        <span class="setup-num">1</span>
+        <div>
+          <div class="setup-txt">Create your Google Sheet</div>
+          <div class="setup-sub">Open <b>sheets.google.com</b> → New blank sheet → Name it "RD Tracker Data"</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="setup-step">
+      <div class="setup-row">
+        <span class="setup-num">2</span>
+        <div>
+          <div class="setup-txt">Set up the Apps Script Web App</div>
+          <div class="setup-sub">In your Sheet → Extensions → Apps Script → paste the script from the setup guide → Deploy → Anyone with link → Copy the Web App URL</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="setup-step">
+      <div class="setup-row">
+        <span class="setup-num">3</span>
+        <div>
+          <div class="setup-txt">Paste your Web App URL here</div>
+          <div class="setup-sub">Looks like: https://script.google.com/macros/s/ABC123.../exec</div>
+        </div>
+      </div>
+      <input class="inp-field" id="wsUrl" placeholder="https://script.google.com/macros/s/…/exec" value="">
+    </div>
+
+    <div class="setup-step">
+      <div class="setup-row">
+        <span class="setup-num">4</span>
+        <div>
+          <div class="setup-txt">Set a Family PIN (optional but recommended)</div>
+          <div class="setup-sub">A simple 4-digit number so only your family can write to the sheet</div>
+        </div>
+      </div>
+      <input class="inp-field" id="wsPIN" placeholder="e.g. 1947" maxlength="8" style="letter-spacing:4px">
+    </div>
+
+    <button class="save-cfg" onclick="saveSyncConfig()">💾 Save & Connect</button>
+    <button class="test-btn" onclick="testSync()">🔁 Test Connection</button>
+    <div id="testResult" style="margin-top:8px;font-size:.78rem;font-weight:700;text-align:center"></div>
+
+    <div style="margin-top:14px;padding:11px;background:rgba(26,122,74,.08);border-radius:10px;border:1.5px solid rgba(26,122,74,.2)">
+      <div style="font-size:.72rem;font-weight:800;color:var(--green);margin-bottom:4px">📋 Google Apps Script to paste (Step 2)</div>
+      <pre id="scriptCode" style="font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--text);white-space:pre-wrap;line-height:1.5;max-height:180px;overflow-y:auto;background:var(--bg);padding:8px;border-radius:6px;cursor:text"></pre>
+      <button onclick="copyScript()" style="margin-top:6px;padding:6px 14px;background:var(--green);color:#fff;border:none;border-radius:7px;font-family:'Nunito',sans-serif;font-size:.75rem;font-weight:800;cursor:pointer">Copy Script</button>
+    </div>
+
+    <div style="margin-top:10px;padding:10px;background:rgba(26,46,74,.06);border-radius:10px;border:1.5px solid var(--border)">
+      <div style="font-size:.72rem;font-weight:800;color:var(--navy);margin-bottom:4px">💾 Manual Backup (always available)</div>
+      <div style="font-size:.72rem;color:var(--muted);margin-bottom:6px">Even without Google Sheets, export a backup file anytime and send it on WhatsApp to family.</div>
+      <button onclick="exportBackup()" style="width:100%;padding:9px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.8rem;font-weight:800;cursor:pointer">💾 Download Backup File</button>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:8px;cursor:pointer;font-size:.75rem;font-weight:700;color:var(--text)">
+        <input type="file" id="restoreFile" accept=".json" onchange="restoreBackup(this)" style="display:none">
+        <button onclick="document.getElementById('restoreFile').click()" style="padding:7px 14px;background:var(--bg);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;font-family:'Nunito',sans-serif;font-size:.75rem;font-weight:800;cursor:pointer">📂 Restore from Backup</button>
+        <span style="color:var(--muted)">Use if phone was reset</span>
+      </label>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// GOOGLE APPS SCRIPT CODE (shown in setup panel)
+// ═══════════════════════════════════════════════════
+const APPS_SCRIPT = `// ── RD Tracker — Google Apps Script (JSONP version) ─────────────
+// Paste into Apps Script → Deploy as Web App
+// Execute as: Me  |  Who has access: Anyone
+
+var SHEET_NAME = 'RD_Records';
+var PIN = '';  // Optional: set e.g. '1947' — match in app ⚙️ Sync screen
+
+function doGet(e) {
+  var cb     = e.parameter.cb || '';      // JSONP callback name
+  var action = e.parameter.action || 'read';
+  var result;
+  if (action === 'write') {
+    result = handleWrite(e.parameter);
+  } else {
+    result = handleRead();
+  }
+  // If a callback name was sent, wrap response as JSONP
+  if (cb) {
+    return ContentService
+      .createTextOutput(cb + '(' + JSON.stringify(result) + ')')
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+  return ContentService
+    .createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function handleWrite(p) {
+  try {
+    if (PIN && p.pin !== PIN) return {ok:false, error:'Wrong PIN'};
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sh = ss.getSheetByName(SHEET_NAME);
+    if (!sh) {
+      sh = ss.insertSheet(SHEET_NAME);
+      sh.appendRow(['key','status','paidDate','mode','note','postTo','depDate','updated']);
+      sh.setFrozenRows(1);
+      sh.getRange(1,1,1,8)
+        .setBackground('#1a2e4a')
+        .setFontColor('#ffffff')
+        .setFontWeight('bold');
+    }
+    var key  = p.key;
+    var rows = sh.getDataRange().getValues();
+    var found = -1;
+    for (var i = 1; i < rows.length; i++) {
+      if (rows[i][0] === key) { found = i + 1; break; }
+    }
+    var row = [
+      key,
+      p.st       || '',
+      p.paidDate || '',
+      p.mode     || '',
+      p.note     || '',
+      p.postTo   || '',
+      p.depDate  || '',
+      new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
+    ];
+    if (found > 0) sh.getRange(found, 1, 1, 8).setValues([row]);
+    else           sh.appendRow(row);
+    colorRow(sh, found > 0 ? found : sh.getLastRow(), p.st);
+    return {ok:true};
+  } catch(err) {
+    return {ok:false, error:err.toString()};
+  }
+}
+
+function handleRead() {
+  try {
+    var ss      = SpreadsheetApp.getActiveSpreadsheet();
+    var sh      = ss.getSheetByName(SHEET_NAME);
+    if (!sh) return {ok:true, records:{}};
+    var rows    = sh.getDataRange().getValues();
+    var records = {};
+    for (var i = 1; i < rows.length; i++) {
+      if (!rows[i][0]) continue;
+      records[rows[i][0]] = {
+        st:       rows[i][1],
+        paidDate: rows[i][2],
+        mode:     rows[i][3],
+        note:     rows[i][4],
+        postTo:   rows[i][5],
+        depDate:  rows[i][6]
+      };
+    }
+    return {ok:true, records:records};
+  } catch(err) {
+    return {ok:false, error:err.toString()};
+  }
+}
+
+function colorRow(sh, rowNum, status) {
+  var colors = {
+    deposited: '#e8f5e9',
+    paid:      '#fff3e0',
+    postponed: '#f3e5f5',
+    missed:    '#ffebee'
+  };
+  sh.getRange(rowNum, 1, 1, 8)
+    .setBackground(colors[status] || '#ffffff');
+}`;
+
+document.getElementById('scriptCode').textContent = APPS_SCRIPT;
+
+function copyScript(){
+  navigator.clipboard.writeText(APPS_SCRIPT).then(()=>alert('✅ Script copied! Paste it in Google Apps Script.'));
+}
+
+// ═══════════════════════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════════════════════
+const SK={sh:'rd_sheets',act:'rd_active',rec:'rd_rec',txn:'rd_txn',cfg:'rd_sync_cfg'};
+function ls(k){try{return JSON.parse(localStorage.getItem(k))}catch{return null}}
+function lss(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{alert('Storage full — please export backup first')}}
+
+// ═══════════════════════════════════════════════════
+// DATE HELPERS
+// ═══════════════════════════════════════════════════
+const NOW=new Date();NOW.setHours(0,0,0,0);
+const TD=NOW.getDate(),TM=NOW.getMonth(),TY=NOW.getFullYear();
+const FIRST_HALF=TD<=15;
+function pd(s){if(!s)return null;const d=new Date(s+'T00:00:00');return isNaN(d)?null:d}
+function fd(s){const d=pd(s);if(!d)return'—';return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}
+function fds(s){const d=pd(s);if(!d)return'—';return d.toLocaleDateString('en-IN',{day:'numeric',month:'short'})}
+function todayStr(){return new Date().toISOString().split('T')[0]}
+function getBatch(due){const d=pd(due);if(!d)return'x';return d.getDate()<=15?'a':'b'}
+function baseSt(due){
+  const d=pd(due);if(!d)return'nodate';
+  const dy=d.getFullYear(),dm=d.getMonth(),dd=d.getDate();
+  if(dy>TY||(dy===TY&&dm>TM))return'future';
+  if(dy<TY||(dy===TY&&dm<TM))return'missed';
+  if(dd<TD)return'missed';if(dd===TD)return'today';return'upcoming';
+}
+
+// ═══════════════════════════════════════════════════
+// GOOGLE SHEETS SYNC ENGINE
+// ═══════════════════════════════════════════════════
+let syncCfg = ls(SK.cfg)||{url:'',pin:''};
+let syncQueue = []; // pending writes to push when online
+let isSyncing = false;
+
+function setSyncBar(state, msg){
+  const el=document.getElementById('syncbar');
+  el.className='syncbar '+state;
+  document.getElementById('syncmsg').textContent=msg;
+}
+
+// Send data to Google Sheets using script tag trick — works from any origin, no CORS issues
+function gsWrite(key, data){
+  return new Promise((resolve)=>{
+    if(!syncCfg.url){resolve(false);return}
+    const p = new URLSearchParams({
+      action:'write', key, pin:syncCfg.pin||'',
+      st:data.st||'', paidDate:data.paidDate||'', mode:data.mode||'',
+      note:data.note||'', postTo:data.postTo||'', depDate:data.depDate||''
+    });
+    const url = syncCfg.url+'?'+p.toString()+'&cb=gsCallback';
+    window._gsCb = ()=>resolve(true);
+    const sc = document.createElement('script');
+    sc.src = url;
+    sc.onerror = ()=>resolve(false);
+    sc.onload = ()=>{ sc.remove(); resolve(true); };
+    document.head.appendChild(sc);
+    setTimeout(()=>{ sc.remove(); resolve(false); }, 8000);
+  });
+}
+
+async function pushRecord(key, data){
+  if(!syncCfg.url){
+    syncQueue.push({key,data,ts:Date.now()});
+    setSyncBar('off','Saved locally only · Set up Google Sheets sync in ⚙️');
+    return;
+  }
+  const ok = await gsWrite(key, data);
+  if(ok){
+    setSyncBar('ok','✓ Synced to Google Sheets — safe on all phones');
+  } else {
+    syncQueue.push({key,data,ts:Date.now()});
+    setSyncBar('err','No internet · Saved locally · Will sync when online');
+  }
+}
+
+function gsRead(){
+  return new Promise((resolve)=>{
+    if(!syncCfg.url){resolve(null);return}
+    const cbName='gsRead_'+Date.now();
+    const url=syncCfg.url+'?action=read&t='+Date.now()+'&cb='+cbName;
+    window[cbName]=(data)=>{ resolve(data); };
+    const sc=document.createElement('script');
+    sc.src=url;
+    sc.onerror=()=>resolve(null);
+    document.head.appendChild(sc);
+    setTimeout(()=>{ sc.remove(); delete window[cbName]; resolve(null); },10000);
+  });
+}
+
+async function pullAllRecords(){
+  if(!syncCfg.url){
+    setSyncBar('off','Not synced · Data saved on this phone only · Tap ⚙️ to set up');
+    return;
+  }
+  setSyncBar('cfg','Syncing from Google Sheets…');
+  const r = await gsRead();
+  if(r && r.ok && r.records){
+    Object.entries(r.records).forEach(([key,remote])=>{
+      const local=rec[key]||{};
+      rec[key]={...local,...Object.fromEntries(Object.entries(remote).filter(([k,v])=>v!==''))};
+    });
+    lss(SK.rec,rec);
+    setSyncBar('ok','✓ Synced · Last pull: '+new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}));
+    all();
+  } else {
+    setSyncBar('err','Could not reach Google Sheets · Using local data');
+  }
+}
+
+async function drainQueue(){
+  if(!syncCfg.url||syncQueue.length===0)return;
+  const q=[...syncQueue]; syncQueue=[];
+  for(const item of q){
+    try{
+      const ok2 = await gsWrite(item.key, item.data);
+      if(!ok2) syncQueue.push(item);
+    }catch{syncQueue.push(item)}
+  }
+  if(syncQueue.length===0)setSyncBar('ok','✓ All pending changes synced to Google Sheets');
+}
+
+// Retry when internet comes back
+window.addEventListener('online',()=>{ drainQueue(); pullAllRecords(); });
+
+async function testSync(){
+  const url=document.getElementById('wsUrl').value.trim();
+  const res=document.getElementById('testResult');
+  if(!url){res.textContent='❌ Please paste the Web App URL first';res.style.color='var(--red)';return}
+  res.textContent='Testing connection…';res.style.color='var(--muted)';
+  // Temporarily use this URL for test
+  const oldUrl=syncCfg.url; syncCfg.url=url;
+  const r=await gsRead();
+  syncCfg.url=oldUrl;
+  if(r && r.ok!==undefined){
+    res.textContent='✅ Connection successful! Google Sheet is ready.';
+    res.style.color='var(--green)';
+  } else {
+    res.textContent='❌ Could not connect. Check: 1) URL is correct 2) Deployed as Anyone 3) Script is saved';
+    res.style.color='var(--red)';
+  }
+}
+
+function saveSyncConfig(){
+  const url=document.getElementById('wsUrl').value.trim();
+  const pin=document.getElementById('wsPIN').value.trim();
+  if(!url){alert('Please paste the Web App URL first');return}
+  syncCfg={url,pin};lss(SK.cfg,syncCfg);
+  closeSettings();
+  pullAllRecords();
+  alert('✅ Sync configured! All payments will now be saved to Google Sheets automatically.');
+}
+
+// ═══════════════════════════════════════════════════
+// SEED MARCH DATA
+// ═══════════════════════════════════════════════════
+const MARCH=[[1,"20001617225","NANDIGAM BRAMARAMBA",2000,62,"2021-01-20","2026-03-20"],[2,"20006586308","D KIRAN KUMAR",2500,60,"2021-03-09","2026-03-09"],[3,"20006586464","R INDIRA DEVI",2500,60,"2021-03-09","2026-03-09"],[4,"20008189093","K SAI KRISHNA",1000,60,"2021-03-22","2026-03-22"],[5,"20009932753","K RAMADEVI",1500,59,"2021-04-05","2026-03-05"],[6,"20010522505","BURELA VENKATA LAKSHMI",4200,59,"2021-04-16","2026-03-16"],[7,"20010680857","CHINTALACHERUVU KOTI REDDY",8000,59,"2021-04-19","2026-03-19"],[8,"20012524420","YELURI MANASA VAMSI PRIYA",5000,58,"2021-06-02","2026-04-02"],[9,"20014324283","KOLISETTY SATYANARAYANA",10000,58,"2021-06-30","2026-04-30"],[10,"20014325313","KOLISETTY SATYANARAYANA",10000,58,"2021-06-30","2026-04-30"],[11,"20014416704","UDUTA JASWANTH",1400,57,"2021-07-01","2026-04-01"],[12,"20014715954","VENNAGIRI EDUKONDALU",5100,58,"2021-07-07","2026-05-07"],[13,"20015379680","PATAN SALMA",3000,56,"2021-07-08","2026-03-08"],[14,"20015379681","C SANKARANARAYANA",5000,57,"2021-07-17","2026-04-17"],[15,"20015672934","KONAKANDLA AKHIL",8600,57,"2021-07-22","2026-04-22"],[16,"20015951693","M RATNA KISHORI",1000,57,"2021-07-26","2026-04-26"],[17,"20015952171","K KASAIAH",4000,56,"2021-07-26","2026-03-26"],[18,"20017788466","ADEPU VISWESWARARAO",2000,56,"2021-08-19","2026-04-19"],[19,"20017792686","V VENKATA SHESHAGIRI RAO",2000,55,"2021-08-19","2026-03-19"],[20,"20017793055","N KALYANI",2000,56,"2021-08-19","2026-04-19"],[21,"20018903265","DEVARAKONDA ANANTHA PAVANI",2100,55,"2021-09-02","2026-04-02"],[22,"20020168382","K VENKATESWARLU",2000,54,"2021-09-20","2026-03-20"],[23,"20020172053","KONDA SARADA",2570,60,null,null],[24,"20020394144","KOLISETTY YASASH",10000,54,"2021-09-22","2026-03-22"],[25,"20020395939","KOLISETTY LASYA PRIYA",10000,54,"2021-09-22","2026-03-22"],[26,"20021007002","KOPPURAVURI VASAVI",5000,54,"2021-09-28","2026-03-28"],[27,"20021008257","KOPPURAVURI VASAVI",10000,54,"2021-09-28","2026-03-28"],[28,"20021683243","ALETI KANAKAIAH",2800,54,"2021-10-07","2026-04-07"],[29,"20022093306","YECHURI KEERTHI",2000,54,"2021-10-12","2026-04-12"],[30,"20022593445","KOPPURAVURI SAMBASIVARAO",12000,53,"2021-10-21","2026-03-21"],[31,"20023111054","NEERUMALLA SAI CHARAN",2000,53,"2021-10-27","2026-03-27"],[32,"20023111202","MATTAPALLI VENKATANARAYANA",1400,54,"2021-10-27","2026-04-27"],[33,"20024247401","ANNA VENKAYAMMA",1220,53,"2021-11-16","2026-04-16"],[34,"20024254876","RAMAVATH SIREESHA BAI",10000,53,"2021-11-16","2026-04-16"],[35,"20024255323","KONAKANDLA KISHORE KUMAR",1500,53,"2021-11-16","2026-04-16"],[36,"20024525454","KATRAPATI LAKSHMI PRIYANKA",10000,52,"2021-11-20","2026-03-20"],[37,"20024525635","KATRAPATI LAKSHMI PRIYANKA",10000,52,"2021-11-20","2026-03-20"],[38,"20024528784","D SRI DEVI",1430,60,null,null],[39,"20024529440","P JAYANTHI",10000,52,"2021-11-20","2026-03-20"],[40,"20025481995","GELLA SARASWATHI",3000,52,"2021-12-02","2026-04-02"],[41,"20028137952","RACHAMADUGU SATYAVATHI",2000,51,"2022-01-06","2026-04-06"],[42,"20028917647","K RANGARAO",1000,51,"2022-01-17","2026-04-17"],[43,"20029655980","GODUGUNURI KRISHNA KUMARI",2750,60,null,null],[44,"20030048520","Y PADMAVATHI",600,51,"2022-01-27","2026-04-27"],[45,"20031637965","S PADMAJA",1400,50,"2022-02-15","2026-04-15"],[46,"20031638083","S PADMAJA",700,50,"2022-02-15","2026-04-15"],[47,"20032484340","THUNUGUNTLA VIVEK VENKATA SAI APURO",3000,49,"2022-02-22","2026-03-22"],[48,"20032486294","JANAPATI VENKATA SATYA SIVA PAVANA KUMARI",3000,50,"2022-02-22","2026-04-22"],[49,"20032488073","OBULASETTY SOWMYA",1500,50,"2022-02-22","2026-04-22"],[50,"20033654194","B SRINIVASA RAO",3000,49,"2022-03-04","2026-04-04"],[51,"20033985737","MANDAPATI KISHORE REDDY",5000,49,"2022-03-09","2026-04-09"],[52,"20033985752","PONDURI ANURADHA",5000,49,"2022-03-09","2026-04-09"],[53,"20037614754","YELURI VEERAIAH",500,48,"2022-04-07","2026-04-07"],[54,"20038518370","PENDYALA SUBRAMANYAM",10000,47,"2022-04-22","2026-03-22"],[55,"20038518568","PENDYALA SUBRAMANYAM",10000,47,"2022-04-22","2026-03-22"],[56,"20040271169","RAVULAPALLI RAMARAO",1500,46,"2022-05-20","2026-03-20"],[57,"20041988580","K RANGARAO",2000,46,"2022-06-13","2026-04-13"],[58,"20042828101","C MERY",1000,45,"2022-06-25","2026-03-25"],[59,"20043097633","M SAI KRISHNA",4000,45,"2022-06-28","2026-03-28"],[60,"20043100542","M SITHA MAHALAKSHMI",5000,45,"2022-06-28","2026-03-28"],[61,"20043495026","VANKA SUKANYA",2000,45,"2022-07-04","2026-04-04"],[62,"20043497163","S ANNAPURNA",3000,45,"2022-07-04","2026-04-04"],[63,"20044527960","RACHAMADUGU KRISHNA",2860,48,"2022-07-19","2026-07-19"],[64,"20047337199","K LAKSHMI RAJESWARI DEVI",5000,44,"2022-08-22","2026-04-22"],[65,"20053848477","M PADMAVATHI",1000,41,"2022-10-29","2026-03-29"],[66,"20053873180","N VENKATARAVAMMA",1500,41,"2022-10-29","2026-03-29"],[67,"20054595687","A HANUMAYAMMA",2300,48,"2022-11-10","2026-11-10"],[68,"20055046101","S VENKATA PADHMAVATI",3000,41,"2022-11-17","2026-04-17"],[69,"20056462856","B ANNAPURNA",5000,41,"2022-11-30","2026-04-30"],[70,"20056483651","C NARASIMHARAO",600,40,"2022-11-30","2026-03-30"],[71,"20061345829","MARAM JYOTHI",11000,38,"2023-01-21","2026-03-21"],[72,"20062447396","Y SUBBARAO",10000,38,"2023-01-28","2026-03-28"],[73,"20062811322","V SAI",10000,39,"2023-01-28","2026-04-28"],[74,"20063081879","G KRISHNA MURTHY",3000,39,"2023-01-29","2026-04-29"],[75,"20072411131","P KAVYA",12000,36,"2023-03-28","2026-03-28"],[76,"20073598925","K LAKSHMI RAJESWARI DEVI",5000,36,"2023-04-11","2026-04-11"],[77,"20073599368","G SRINIVASA RAO",6000,36,"2023-04-11","2026-04-11"],[78,"20073601023","GRANDHE DURGA",6000,36,"2023-04-11","2026-04-11"],[79,"20073697926","D REVATHI",2500,36,"2023-04-12","2026-04-12"],[80,"20074129576","G CHINA SATYANARAYANA",3000,35,"2023-04-18","2026-03-18"],[81,"20074943786","M SRINIVASA SARMA",3200,36,"2023-04-27","2026-04-27"],[82,"20074944629","D SARASWATHI",3200,36,"2023-04-27","2026-04-27"],[83,"20074946040","Y MAHALAKSHMI",500,36,"2023-04-27","2026-04-27"],[84,"20075414169","M VENKATANARAYANA",6800,35,"2023-05-03","2026-04-03"],[85,"20076037888","C MANIKANTA",2000,35,"2023-05-12","2026-04-12"],[86,"20076432066","K VENKATA NAGA ANIL KUMAR",6000,34,"2023-05-17","2026-03-17"],[87,"20077780531","Y ANURADHA",5000,34,"2023-06-01","2026-04-01"],[88,"20077781783","M VENKATA LAKSHMI",3200,37,"2023-06-01","2026-07-01"],[89,"20078306471","K PADMAVATHI",3850,36,"2023-06-08","2026-06-08"],[90,"20078829344","C RAMADEVI",700,34,"2023-06-15","2026-04-15"],[91,"20078851926","B REVATHI",1000,34,"2023-06-15","2026-04-15"],[92,"20079100111","T PRASADA LAKSHMI",1050,33,"2023-06-17","2026-03-17"],[93,"20079103599","GUNDA NAGALATHA",4000,33,"2023-06-17","2026-03-17"],[94,"20080562490","G HARI GOPAL",10000,34,"2023-07-01","2026-05-01"],[95,"20080804890","N JAGADEESH GOPI",6000,33,"2023-07-04","2026-04-04"],[96,"20082369236","T PRASADA LAKSHMI",300,32,"2023-07-21","2026-03-21"],[97,"20082499488","ATMAKURI RAMAKRISHNA",10000,32,"2023-07-22","2026-03-22"],[98,"20083191005","VANDANAPU JHANSI",6000,32,"2023-07-31","2026-03-31"],[99,"20084975201","C SUNITHA",1000,31,"2023-08-22","2026-03-22"],[100,"20088037221","DARAM AMITHA",6000,31,"2023-09-25","2026-04-25"],[101,"20088037728","J PRASAD",1500,31,"2023-09-25","2026-04-25"],[102,"20088039584","VANDANAPU JHANSI",6000,30,"2023-09-25","2026-03-25"],[103,"20088040206","DARAM AMITHA",6000,31,"2023-09-25","2026-04-25"],[104,"20088068698","UDATHA HARISH KUMAR",10000,30,"2023-09-25","2026-03-25"],[105,"20089159503","CHALLA SUGUNA",2000,30,"2023-10-10","2026-04-10"],[106,"20089163029","K SARADA",5000,28,"2023-10-10","2026-02-10"],[107,"20089480810","Y VENKATA SAI RAM",3200,37,"2023-10-12","2026-11-12"],[108,"20089804437","T PRASADA LAKSHMI",3400,29,"2023-10-17","2026-03-17"],[109,"20089904044","C NAGA MOUNIKA",4200,30,"2023-10-17","2026-04-17"],[110,"20089906101","C PADMAJA",7000,30,"2023-10-17","2026-04-17"],[111,"20089982705","J SUBRAHMANYA SARMA",1000,30,"2023-10-18","2026-04-18"],[112,"20091533644","T VENKATA SATEESH KUMAR",6500,24,"2023-11-06","2025-11-06"],[113,"20095529518","VINJAMURI SESHA PRASANTHI",4000,28,"2023-12-14","2026-04-14"],[114,"20096559878","A SUDHAKARA RAO",3000,36,"2023-12-26","2026-12-26"],[115,"20096975485","V NAGA LAKSHMI",5000,27,"2023-12-29","2026-03-29"],[116,"20098025423","P AYUB KHAN",250,27,"2024-01-09","2026-04-09"],[117,"20098026982","T SUBADRAMMA",1000,26,"2024-01-09","2026-03-09"],[118,"20100437419","K PADMA VATHI",2000,26,"2024-01-27","2026-03-27"],[119,"20102806209","P SYAMALA",10000,26,"2024-02-13","2026-04-13"],[120,"20105687504","NANDIGAM BRAMARAMBA",3000,25,"2024-02-26","2026-03-26"],[121,"20107109673","C HANUMANTHA RAO",3000,25,"2024-03-05","2026-04-05"],[122,"20108565708","O ANJANI KUMARI",1000,25,"2024-03-15","2026-04-15"],[123,"20114319208","G LAKSHMI NARASAIAH",5000,23,"2024-04-23","2026-03-23"],[124,"20114645975","Y SAIBABU",1400,24,"2024-04-26","2026-04-26"],[125,"20115714624","K SRINIVASA RAO",3800,23,"2024-05-10","2026-04-10"],[126,"20116252942","M VENKATESWARLU",5000,24,"2024-05-17","2026-05-17"],[127,"20116281692","RACHAMADUGU KRISHNA",4000,23,"2024-05-17","2026-04-17"],[128,"20118090392","KOPPURAVURI ANURADHA",6500,24,"2024-06-06","2026-06-06"],[129,"20118818132","L SRINIVASARAO",3200,24,"2024-06-15","2026-06-15"],[130,"20121464459","V VENKATA YALLARAO",1400,21,"2024-07-10","2026-04-10"],[131,"20121465331","V VENKATRAO",1500,21,"2024-07-10","2026-04-10"],[132,"20121466115","V EDUKONDALU",7200,21,"2024-07-10","2026-04-10"],[133,"20121466259","A RAMESH",1500,24,"2024-07-10","2026-07-10"],[134,"20123032197","G NASARAIAH",4500,24,"2024-07-24","2026-07-24"],[135,"20124750713","KROSURI SRIVALLI",4000,20,"2024-08-09","2026-04-09"],[136,"20124752013","Y LAKSHMI NANDINI",1500,20,"2024-08-09","2026-04-09"],[137,"20124773548","R SRAVANI",1000,20,"2024-08-09","2026-04-09"],[138,"20125522343","P NARASIMHARAO",1400,20,"2024-08-17","2026-04-17"],[139,"20125522964","K KOTESWARAMMA",2000,20,"2024-08-17","2026-04-17"],[140,"20126227264","S NAGALAKSHMI",1900,19,"2024-08-23","2026-03-23"],[141,"20126697571","L SWARNA LATHA",3300,24,"2024-08-27","2026-08-27"],[142,"20126697625","L SADASIVARAO",3300,24,"2024-08-27","2026-08-27"],[143,"20127950483","J SIVARAMA KRISHNA",3300,24,"2024-09-06","2026-09-06"],[144,"20128242451","KASARLA VIJAYA LAKSHMI",4000,24,"2024-09-11","2026-09-11"],[145,"20128243240","TALLAM ARUNA",5000,19,"2024-09-11","2026-04-11"],[146,"20128248722","K NARSI REDDY",3800,24,"2024-09-11","2026-09-11"],[147,"20128373812","V GURAVAMMA",2000,19,"2024-09-12","2026-04-12"],[148,"20129439548","M S D RUPASREE ANUSHA",3300,24,"2024-09-23","2026-09-23"],[149,"20130542678","CHITTOJU MADHAVI",2000,18,"2024-10-01","2026-04-01"],[150,"20132418027","K RATNA KUMARI",2300,24,"2024-10-21","2026-10-21"],[151,"20133693503","VANDANAPU JHANSI",6000,17,"2024-10-29","2026-03-29"],[152,"20134439019","S YAMINI NAGA LAKSHMI",2000,17,"2024-11-09","2026-04-09"],[153,"20134440309","S YAMINI NAGA LAKSHMI",2000,17,"2024-11-09","2026-04-09"],[154,"20134535383","C VIJAYA KUMARI",5500,17,"2024-11-11","2026-04-11"],[155,"20135257391","RAVULAPALLI RAMARAO",5500,16,"2024-11-19","2026-03-19"],[156,"20137443895","C NARASIMHARAO",1000,16,"2024-12-03","2026-04-03"],[157,"20137722256","M VENKATESWARLU",4000,24,"2024-12-06","2026-12-06"],[158,"20137723209","Y RAMADEVI",1000,15,"2024-12-06","2026-03-06"],[159,"20139286538","K PADMAVATHI",5000,16,"2024-12-20","2026-04-20"],[160,"20140459155","K KASAIAH",4000,15,"2024-12-31","2026-03-31"],[161,"20142923510","T PRASADA LAKSHMI",10250,14,"2025-01-18","2026-03-18"],[162,"20143236940","KATTAMURI ALEKHYA",15000,14,"2025-01-21","2026-03-21"],[163,"20147987485","VANKA SUKANYA",2000,13,"2025-02-20","2026-03-20"],[164,"20147987775","CHITTOJU ESWARAMMA",2000,14,"2025-02-20","2026-04-20"],[165,"20150596355","B NAGA VALLI",2100,13,"2025-03-07","2026-04-07"],[166,"20152794468","CHATTA RAMADEVI",1400,12,"2025-03-19","2026-03-19"],[167,"20152795356","M PULLARAO",5000,17,"2025-03-19","2026-08-19"],[168,"20153469981","CHAKKA KISHORE KUMAR",15000,12,"2025-03-21","2026-03-21"],[169,"20155291666","VINJAMURI SESHA PRASANTHI",3000,13,"2025-03-27","2026-04-27"],[170,"20156334601","A RAMESH",1800,12,"2025-04-04","2026-04-04"],[171,"20156794159","YAKKALA RAMAKRISHNARAO",2000,12,"2025-04-11","2026-04-11"],[172,"20156806953","A JANI SASTRY",2000,12,"2025-04-11","2026-04-11"],[173,"20158634674","BURELA VENKATA LAKSHMI",2000,13,"2025-04-30","2026-05-30"],[174,"20160599336","MUTTA SUBRAHMANYAM",1500,10,"2025-05-24","2026-03-24"],[175,"20164152350","A AMARA VENKATA RAMANA KUMARI",1700,12,"2025-06-26","2026-06-26"],[176,"20164688015","K VENKATA NAGA ANIL KUMAR",10000,9,"2025-06-28","2026-03-28"],[177,"20168099682","P SYAMALA",10000,8,"2025-07-26","2026-03-26"],[178,"20169930106","G HARI GOPAL",4000,7,"2025-08-18","2026-03-18"],[179,"20170180516","DESU LAKSHMI SAKUNTHALA",2050,7,"2025-08-20","2026-03-20"],[180,"20170593380","DUDEKULA SAIDHA BEE",5000,7,"2025-08-22","2026-03-22"],[181,"20173519205","PENDELA VENKATESWARLU",2000,6,"2025-09-12","2026-03-12"],[182,"20173520301","P NARASIMHARAO",1000,7,"2025-09-12","2026-04-12"],[183,"20174894922","C PEDDA LAKSHMAIAH",15000,7,"2025-09-20","2026-04-20"],[184,"20175295922","KOPPURAVURI ANURADHA",6000,6,"2025-09-23","2026-03-23"],[185,"20176286353","Y SRILAKSHMI",3000,12,"2025-09-27","2026-09-27"],[186,"20176536650","PANEM VASAVI",3000,7,"2025-09-29","2026-04-29"],[187,"20176545879","G VENKATA PAVAN KUMAR",5000,6,"2025-09-29","2026-03-29"],[188,"20176765009","V SATYANARAYANA",2200,6,"2025-09-30","2026-03-30"],[189,"20176966734","V SATYANARAYANA",1100,6,"2025-10-03","2026-04-03"],[190,"20177119234","M S D RUPASREE ANUSHA",2000,12,"2025-10-04","2026-10-04"],[191,"20180001401","P SYAMALA",10000,6,"2025-10-27","2026-04-27"],[192,"20183469256","D SRI DEVI",4650,12,"2025-11-19","2026-11-19"],[193,"20183714262","M KRISHNAVENI",3000,4,"2025-11-20","2026-03-20"],[194,"20185386659","KARALAPATI JAYA KUMARI",10000,4,"2025-11-28","2026-03-28"],[195,"20189580650","M SATYAVATHI",2100,4,"2025-12-23","2026-04-23"],[196,"20191287013","P ADILAKSHMI",4000,3,"2026-01-02","2026-04-02"],[197,"20191290636","UDATHA PRASADARAO",2000,3,"2026-01-02","2026-04-02"],[198,"20191927789","Y KANAKA DURGA",6000,3,"2026-01-06","2026-04-06"],[199,"20191927796","Y VENKATA SUBBARAO",6000,3,"2026-01-06","2026-04-06"],[200,"20192803778","VANDANAPU NAGAMANI",5000,3,"2026-01-12","2026-04-12"],[201,"20192805238","NEMALIKONDA HEMA",2000,3,"2026-01-12","2026-04-12"],[202,"20193991809","A CHENCHAIAH",5000,3,"2026-01-17","2026-04-17"],[203,"20196078073","MADDAM ANJALI",1500,2,"2026-01-27","2026-03-27"],[204,"20200860816","KONGANI VENKATA RAMANA",2000,2,"2026-02-17","2026-04-17"],[205,"20200863388","S SHAFILLA",6000,2,"2026-02-17","2026-04-17"],[206,"20200866137","S ABDUL GAFAR",6000,2,"2026-02-17","2026-04-17"],[207,"20200866296","SHAIK NOOR BABU",6000,2,"2026-02-17","2026-04-17"],[208,"20206715671","BUSIRAJU CHENNAMMA",2000,1,"2026-03-10","2026-04-10"],[209,"20211068525","P JAYANTHI",6500,1,"2026-03-23","2026-04-23"],[210,"20211071969","M LAKSHMI PARVATAMMA",5000,1,"2026-03-23","2026-04-23"],[211,"20211074750","SUDA PERAMMA",2000,1,"2026-03-23","2026-04-23"],[212,"20211076849","VEMULA PARVATHI",1000,1,"2026-03-23","2026-04-23"],[213,"3260602946","PRATHIPATI UMADEVI",5210,120,null,null],[214,"3302452775","K RAMA DEVI",500,118,"2016-06-15","2026-04-15"],[215,"3360417815","B PERA REDDY",1500,113,"2016-08-29","2026-01-29"],[216,"3466338342","P AYUB KHAN",2000,111,"2016-12-30","2026-03-30"],[217,"3476015943","N SWATHI",700,111,"2017-01-10","2026-04-10"],[218,"3495817610","M NARENDRA KUMAR",2500,110,"2017-01-27","2026-03-27"],[219,"3495826124","M NARENDRA KUMAR",2500,110,"2017-01-27","2026-03-27"],[220,"3563455812","M KRISHNAVENI",2000,109,"2017-03-14","2026-04-14"],[221,"3624278220","B ARUNA",2000,108,"2017-04-12","2026-04-12"],[222,"3624281978","N DIVYA BHANU REKHA",1000,108,"2017-04-12","2026-04-12"],[223,"3631574711","S HAMIDA",1000,108,"2017-04-20","2026-04-20"],[224,"3657036217","K KOTESWARA RAO",1000,106,"2017-05-19","2026-03-19"],[225,"3725617454","V SAMBASIVARAO",1500,104,"2017-08-02","2026-04-02"],[226,"3754666751","M VARALAKSHMI",2000,103,"2017-09-06","2026-04-06"],[227,"3803981989","A SUDHAKARA RAO",4200,102,"2017-10-25","2026-04-25"],[228,"3864372511","A VENKATALAKSHMI NARASAMMA",4200,100,"2017-12-23","2026-04-23"],[229,"3943252215","S HAMEEDA BI",3000,98,"2018-02-22","2026-04-22"],[230,"3943321270","KOPPURAVURI ANURADHA",6000,97,"2018-02-22","2026-03-22"],[231,"4006363442","M KRISHNAVENI",2400,96,"2018-04-03","2026-04-03"],[232,"4171933235","P ZAHARA BI",6000,90,"2018-10-13","2026-04-13"],[233,"4473080446","G NASARAIAH",10000,82,"2019-06-29","2026-04-29"],[234,"4513246733","P SYAMALA",10000,80,"2019-08-06","2026-04-06"],[235,"4552795667","S NAGALAKSHMI",5000,79,"2019-09-16","2026-04-16"],[236,"4680746975","M SRINIVASA SARMA",1000,74,"2020-01-13","2026-03-13"],[237,"4693664808","KOPPURAVURI SAMBASIVARAO",11000,74,"2020-01-22","2026-03-22"],[238,"4699770947","K JAYA SAI SRAVANTH",4000,74,"2020-01-27","2026-03-27"],[239,"4756998437","KASARLA SAI PRATAP REDDY",3000,73,"2020-03-09","2026-04-09"],[240,"4812625994","MAREMALLA S D RUPASREE ANUSHA",2500,70,"2020-06-15","2026-04-15"],[241,"4958563969","KOTHA RAMASITAMMA",1200,65,"2020-11-17","2026-04-17"],[242,"4964495773","D KIRAN KUMAR",2500,61,"2020-11-23","2025-12-23"],[243,"4964502938","R INDIRA DEVI",3100,61,"2020-11-23","2025-12-23"],[244,"5006306194","GUNDA LIKITHA",3000,63,"2020-12-31","2026-03-31"],[245,"5006336351","GUNDA SRUJANA",3000,63,"2020-12-31","2026-03-31"],[246,"7236537391","SANAGAPULA KISHOREBABU",500,120,null,null]];
+
+// ═══════════════════════════════════════════════════
+// APP STATE
+// ═══════════════════════════════════════════════════
+let sheets=ls(SK.sh)||[];
+let rec=ls(SK.rec)||{};
+let txn=ls(SK.txn)||[];
+let actId=ls(SK.act)||null;
+
+if(!sheets.length){
+  const s={id:'march_2026',name:'March 2026',month:2,year:2026,added:new Date().toISOString(),
+    data:MARCH.map(r=>({sno:r[0],acct:String(r[1]),name:r[2],amt:r[3],months:r[4],openDate:r[5]||null,dueDate:r[6]||null}))};
+  sheets=[s];actId=s.id;lss(SK.sh,sheets);lss(SK.act,actId);
+}
+
+let activeBatch=FIRST_HALF?'a':'b';
+let sf='all';
+let view='home';
+let openCards=new Set();
+
+function gsheet(){return sheets.find(s=>s.id===actId)||sheets[0]}
+function rows(){return(gsheet()||{data:[]}).data}
+function rk(acct){return actId+'__'+acct}
+function eff(row){const r=rec[rk(row.acct)];if(r&&r.st)return r.st;return baseSt(row.dueDate)}
+
+// ═══════════════════════════════════════════════════
+// HEADER
+// ═══════════════════════════════════════════════════
+document.getElementById('hd-date').textContent=NOW.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+document.getElementById('hd-half').textContent=NOW.toLocaleDateString('en-IN',{weekday:'short'})+(FIRST_HALF?' · 1st Half':' · 2nd Half');
+
+function renderChips(){
+  document.getElementById('mchips').innerHTML=
+    sheets.map(s=>`<button class="mc${s.id===actId?' on':''}" onclick="switchSheet('${s.id}')">${s.name}</button>`).join('')+
+    `<button class="mc mc-add" onclick="openUpload()">+ Add Month</button>`;
+}
+function switchSheet(id){actId=id;lss(SK.act,id);openCards.clear();renderChips();all()}
+
+// ═══════════════════════════════════════════════════
+// BATCH / SF / STATS
+// ═══════════════════════════════════════════════════
+function setBatch(b){activeBatch=b;['a','b','all'].forEach(k=>document.getElementById('bt-'+k).classList.toggle('on',k===b));all()}
+function updateBCounts(){const r=rows();document.getElementById('bc-a').textContent=r.filter(x=>getBatch(x.dueDate)==='a').length;document.getElementById('bc-b').textContent=r.filter(x=>getBatch(x.dueDate)==='b').length;document.getElementById('bc-all').textContent=r.length}
+function setSF(f){sf=f;['all','miss','up','paid','dep','post'].forEach(k=>document.getElementById('ss-'+k)?.classList.toggle('on',k===f));render()}
+function batchPool(){const r=rows();return r.filter(x=>activeBatch==='all'||getBatch(x.dueDate)===activeBatch||getBatch(x.dueDate)==='x')}
+function updateStats(){const p=batchPool();document.getElementById('sv-all').textContent=p.length;document.getElementById('sv-miss').textContent=p.filter(r=>['missed','today'].includes(eff(r))).length;document.getElementById('sv-up').textContent=p.filter(r=>eff(r)==='upcoming').length;document.getElementById('sv-paid').textContent=p.filter(r=>eff(r)==='paid').length;document.getElementById('sv-dep').textContent=p.filter(r=>eff(r)==='deposited').length;document.getElementById('sv-post').textContent=p.filter(r=>eff(r)==='postponed').length}
+
+// ═══════════════════════════════════════════════════
+// RENDER HOME
+// ═══════════════════════════════════════════════════
+function render(){
+  if(view!=='home')return;
+  const q=document.getElementById('qbox').value.trim().toLowerCase();
+  const sort=document.getElementById('sortSel').value;
+  let pool=batchPool().filter(r=>{const e=eff(r);if(sf==='miss')return e==='missed'||e==='today';if(sf==='up')return e==='upcoming';if(sf==='paid')return e==='paid';if(sf==='dep')return e==='deposited';if(sf==='post')return e==='postponed';return true});
+  if(q)pool=pool.filter(r=>r.name.toLowerCase().includes(q)||r.acct.includes(q));
+  pool.sort((a,b)=>{if(sort==='due'){const da=pd(a.dueDate),db=pd(b.dueDate);if(!da&&!db)return 0;if(!da)return 1;if(!db)return-1;return da-db}if(sort==='amt')return b.amt-a.amt;if(sort==='az')return a.name.localeCompare(b.name);return a.sno-b.sno});
+  const mn=NOW.toLocaleString('en-IN',{month:'long'});
+  let ban='';
+  if(activeBatch==='a')ban=`<div class="ban ban-a"><b>📘 Batch 1 — 1st to 15th</b><br>${FIRST_HALF?`✅ You are in the first half of ${mn}. <b>Focus on this list now.</b>`:`🔁 First half is over. Check who hasn't paid yet.`}</div>`;
+  else if(activeBatch==='b')ban=`<div class="ban ban-b"><b>📙 Batch 2 — 16th to End</b><br>${!FIRST_HALF?`✅ You are in the second half of ${mn}. <b>Focus on this list now.</b>`:`⏳ Second half starts after the 15th.`}</div>`;
+  const el=document.getElementById('main');
+  if(!pool.length){el.innerHTML=ban+`<div class="empty"><div class="ei">🔍</div><p>No accounts match</p></div>`;return}
+  el.innerHTML=ban+pool.map(r=>cardHTML(r)).join('');
+  openCards.forEach(ac=>{const e=document.getElementById('ca-'+ac);if(e)e.classList.add('open')});
+}
+
+function cardHTML(r){
+  const e=eff(r);const rv=rec[rk(r.acct)]||{};
+  const cc=e==='deposited'?'cdep':e==='paid'?'cp':e==='postponed'?'cpo':e==='missed'?'cm':e==='today'?'ct':e==='upcoming'?'cu':'cf';
+  const bt=e==='deposited'?'🏛️ Deposited':e==='paid'?'💰 Collected':e==='postponed'?'📅 Postponed':e==='missed'?'⛔ Not Collected':e==='today'?'⭐ Collect Today!':e==='upcoming'?'⏳ Due '+fds(r.dueDate):'🔮 '+fds(r.dueDate);
+  const bc=e==='deposited'?'bdep':e==='paid'?'bp':e==='postponed'?'bpo':e==='missed'?'bm':e==='today'?'bt2':e==='upcoming'?'bu':'bf';
+  const amt='₹'+r.amt.toLocaleString('en-IN');
+  let chips=`<span class="chip dc">📅 ${r.dueDate?fds(r.dueDate):'No date'}</span><span class="chip">📆 ${r.months}m</span>`;
+  if(rv.paidDate)chips+=`<span class="chip pc">💰 Collected ${fds(rv.paidDate)} · ${rv.mode||'—'}</span>`;
+  if(rv.depDate)chips+=`<span class="chip" style="color:var(--green);background:rgba(26,122,74,.08)">🏛️ Deposited ${fds(rv.depDate)}</span>`;
+  if(rv.note)chips+=`<span class="chip nc">📝 ${rv.note.substring(0,25)}${rv.note.length>25?'…':''}</span>`;
+  if(rv.postTo)chips+=`<span class="chip nc">➡️ ${rv.postTo}</span>`;
+  const isPaid=e==='paid',isDep=e==='deposited',isPost=e==='postponed';
+  const hasUndo=isPaid||isDep||isPost;
+  return`<div class="card ${cc}">
+  <div class="ctop" onclick="tc('${r.acct}')">
+    <span class="csno">#${r.sno}</span>
+    <div class="cmain"><div class="cname">${r.name}</div><div class="cacct">${r.acct}</div></div>
+    <div class="cright"><div class="camt">${amt}</div><div class="cbadge ${bc}">${bt}</div></div>
+  </div>
+  <div class="cmeta">${chips}</div>
+  <div class="cact" id="ca-${r.acct}">
+    <div class="albl">💰 Step 1 — How did customer pay Dad?</div>
+    <div class="arow">
+      <button class="ab ab-cash${(isPaid||isDep)&&rv.mode==='Cash'?' done':''}" onclick="pay('${r.acct}','Cash')">💵 Cash (नकद)</button>
+      <button class="ab ab-upi${(isPaid||isDep)&&rv.mode==='UPI'?' done':''}" onclick="pay('${r.acct}','UPI')">📱 Bank Transfer / UPI</button>
+    </div>
+    ${isPaid?`<div class="albl" style="margin-top:2px">🏛️ Step 2 — Did Dad deposit at Post Office?</div>
+    <div class="arow">
+      <button class="ab ab-dep" onclick="deposit('${r.acct}')">🏛️ Mark as Deposited at Post Office</button>
+    </div>`:''}
+    <div class="albl" style="margin-top:2px">📅 Couldn't collect?</div>
+    <div class="arow">
+      <button class="ab ab-post${isPost?' done':''}" onclick="postpone('${r.acct}')">📅 Move to Next Month</button>
+      ${hasUndo?`<button class="ab ab-undo" onclick="undo('${r.acct}')">↩️ Undo</button>`:''}
+    </div>
+    <div class="albl" style="margin-top:4px">📝 Write a note</div>
+    <textarea class="ninp" id="ni-${r.acct}" rows="2" placeholder="e.g. Collected 23 March morning · Deposited same day · Receipt no. 4521">${rv.note||''}</textarea>
+    <button class="nsave" onclick="saveNote('${r.acct}')">💾 Save Note</button>
+  </div>
+</div>`;
+}
+
+function tc(ac){const e=document.getElementById('ca-'+ac);if(!e)return;const o=e.classList.contains('open');e.classList.toggle('open',!o);if(!o)openCards.add(ac);else openCards.delete(ac)}
+
+// ═══════════════════════════════════════════════════
+// PAYMENT ACTIONS — all push to Google Sheets
+// ═══════════════════════════════════════════════════
+function pay(ac,mode){
+  const row=rows().find(r=>r.acct===ac);if(!row)return;
+  const today=todayStr();
+  const data={st:'paid',paidDate:today,mode,postTo:'',note:rec[rk(ac)]?.note||''};
+  rec[rk(ac)]={...rec[rk(ac)]||{},...data};
+  lss(SK.rec,rec);
+  txn.push({date:today,acct:ac,name:row.name,amt:row.amt,mode,sid:actId,sname:gsheet()?.name||''});
+  lss(SK.txn,txn);
+  pushRecord(rk(ac), rec[rk(ac)]);  // ← syncs to Google Sheets
+  if(navigator.vibrate)navigator.vibrate(60);
+  all();
+}
+
+function deposit(ac){
+  const today=todayStr();
+  const data={st:'deposited',depDate:today};
+  rec[rk(ac)]={...rec[rk(ac)]||{},...data};
+  lss(SK.rec,rec);
+  pushRecord(rk(ac), rec[rk(ac)]);
+  if(navigator.vibrate)navigator.vibrate([40,20,40]);
+  all();
+}
+
+function postpone(ac){
+  const next=new Date(TY,TM+1,1);
+  const nm=next.toLocaleString('en-IN',{month:'long',year:'numeric'});
+  const data={st:'postponed',postTo:nm,paidDate:'',mode:'',note:rec[rk(ac)]?.note||''};
+  rec[rk(ac)]={...rec[rk(ac)]||{},...data};
+  lss(SK.rec,rec);
+  pushRecord(rk(ac), rec[rk(ac)]);  // ← syncs to Google Sheets
+  if(navigator.vibrate)navigator.vibrate([20,20,20]);
+  all();
+}
+
+function undo(ac){
+  const today=todayStr();
+  const ridx=[...txn].reverse().findIndex(t=>t.acct===ac&&t.date===today);
+  if(ridx>=0){txn.splice(txn.length-1-ridx,1);lss(SK.txn,txn)}
+  const data={st:'',paidDate:'',mode:'',postTo:'',depDate:''};
+  rec[rk(ac)]={...rec[rk(ac)]||{},...data};
+  lss(SK.rec,rec);
+  pushRecord(rk(ac), rec[rk(ac)]);
+  all();
+}
+
+function saveNote(ac){
+  const note=document.getElementById('ni-'+ac)?.value||'';
+  rec[rk(ac)]={...rec[rk(ac)]||{},note};
+  lss(SK.rec,rec);
+  pushRecord(rk(ac), rec[rk(ac)]);  // ← syncs to Google Sheets
+  if(navigator.vibrate)navigator.vibrate(30);
+  all();
+}
+
+// ═══════════════════════════════════════════════════
+// VIEWS
+// ═══════════════════════════════════════════════════
+function setView(v){
+  view=v;
+  ['home','led','sum'].forEach(k=>document.getElementById('nav-'+k)?.classList.toggle('on',k===v));
+  document.getElementById('nav-up').classList.remove('on');
+  document.getElementById('nav-cfg').classList.remove('on');
+  const bb=document.querySelector('.bbar'),ss=document.querySelector('.sstrip'),sr=document.querySelector('.srch');
+  if(v==='home'){bb.style.display='';ss.style.display='';sr.style.display='';render()}
+  else{bb.style.display='none';ss.style.display='none';sr.style.display='none';if(v==='led')renderLed();else renderSum()}
+}
+
+function renderLed(){
+  const el=document.getElementById('main');
+  if(!txn.length){el.innerHTML=`<div class="empty"><div class="ei">📒</div><p>No payments recorded yet</p><small>Payments appear here when Dad marks them</small></div>`;return}
+  const byDate={};[...txn].reverse().forEach(t=>{if(!byDate[t.date])byDate[t.date]=[];byDate[t.date].push(t)});
+  el.innerHTML=`<div style="padding:8px 12px 2px;font-size:.68rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.7px">Payment Ledger${syncCfg.url?' · ☁️ Synced to Google Sheets':' · 📱 Local only'}</div>`+
+  Object.entries(byDate).map(([date,list])=>{
+    const tot=list.reduce((s,t)=>s+t.amt,0);
+    return`<div class="lcard">
+    <div class="ldh">${new Date(date+'T00:00:00').toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'long',year:'numeric'})} · ₹${tot.toLocaleString('en-IN')}</div>
+    ${list.map(t=>{const rv2=rec[actId+'__'+t.acct]||{};return`<div class="lrow"><div class="lname">${t.name}<div style="font-size:.62rem;color:var(--muted)">${t.sname}${rv2.depDate?' · 🏛️ Deposited '+fds(rv2.depDate):' · ⏳ Not yet deposited'}</div></div><div class="lamt">₹${t.amt.toLocaleString('en-IN')}</div><div class="lmode">${t.mode}</div></div>`}).join('')}
+  </div>`}).join('');
+}
+
+function renderSum(){
+  const r=rows();const sh=gsheet();const today=todayStr();
+  const todT=txn.filter(t=>t.date===today);const mT=txn.filter(t=>t.sid===actId);
+  const paid=r.filter(x=>eff(x)==='paid').length,dep=r.filter(x=>eff(x)==='deposited').length,miss=r.filter(x=>['missed','today'].includes(eff(x))).length,post=r.filter(x=>eff(x)==='postponed').length;
+  document.getElementById('main').innerHTML=`
+<div style="padding:10px 12px 4px;font-size:.68rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.7px">${sh?.name||''} · Summary</div>
+<div style="padding:0 12px">
+  <div class="sgrid">
+    <div class="sbox"><div style="font-size:1.4rem">📋</div><div class="sbox-v" style="color:var(--navy)">${r.length}</div><div class="sbox-l">Total</div></div>
+    <div class="sbox"><div style="font-size:1.4rem">💰</div><div class="sbox-v" style="color:var(--orange)">${paid}</div><div class="sbox-l">Collected</div></div>
+    <div class="sbox"><div style="font-size:1.4rem">🏛️</div><div class="sbox-v" style="color:var(--green)">${dep}</div><div class="sbox-l">Deposited P.O.</div></div>
+    <div class="sbox"><div style="font-size:1.4rem">⛔</div><div class="sbox-v" style="color:var(--red)">${miss}</div><div class="sbox-l">Follow-up</div></div>
+  </div>
+  <div style="background:rgba(211,84,0,.07);border-radius:12px;padding:11px 13px;border:1.5px solid rgba(211,84,0,.2);margin-bottom:8px;font-size:.8rem;font-weight:700;color:var(--orange)">
+    💰 <b>${paid}</b> collected but not yet deposited at Post Office — go deposit these!
+  </div>
+  <div style="background:var(--surf);border-radius:12px;padding:13px;border:1.5px solid var(--border);margin-bottom:8px">
+    <div style="font-size:.68rem;font-weight:800;text-transform:uppercase;color:var(--muted);margin-bottom:7px">💰 Collection</div>
+    <div class="sline"><span class="sline-l">Collected Today</span><span class="sline-v" style="color:var(--green)">₹${todT.reduce((s,t)=>s+t.amt,0).toLocaleString('en-IN')}</span></div>
+    <div class="sline"><span class="sline-l">Cash this month</span><span class="sline-v">₹${mT.filter(t=>t.mode==='Cash').reduce((s,t)=>s+t.amt,0).toLocaleString('en-IN')}</span></div>
+    <div class="sline"><span class="sline-l">UPI / Transfer</span><span class="sline-v">₹${mT.filter(t=>t.mode==='UPI').reduce((s,t)=>s+t.amt,0).toLocaleString('en-IN')}</span></div>
+    <div class="sline"><span class="sline-l"><b>Total this month</b></span><span class="sline-v" style="color:var(--navy)">₹${mT.reduce((s,t)=>s+t.amt,0).toLocaleString('en-IN')}</span></div>
+  </div>
+  <div style="background:var(--surf);border-radius:12px;padding:13px;border:1.5px solid var(--border);margin-bottom:8px">
+    <div style="font-size:.68rem;font-weight:800;text-transform:uppercase;color:var(--muted);margin-bottom:7px">📅 Batch Progress</div>
+    ${['a','b'].map(b=>{const br=r.filter(x=>getBatch(x.dueDate)===b);const bp=br.filter(x=>eff(x)==='deposited').length;const bc2=br.filter(x=>eff(x)==='paid').length;const pct=br.length?Math.round((bp+bc2)/br.length*100):0;return`<div class="sline"><span class="sline-l">${b==='a'?'📘 Batch 1 (1–15)':'📙 Batch 2 (16–End)'}</span><span style="font-size:.82rem;font-weight:800;color:var(--green)">${bp} deposited · ${bc2} collected</span></div><div style="background:var(--bg);border-radius:6px;height:6px;margin-bottom:8px;overflow:hidden"><div style="background:var(--green);height:100%;width:${pct}%;border-radius:6px"></div></div>`}).join('')}
+  </div>
+  <div style="background:${syncCfg.url?'rgba(26,122,74,.08)':'rgba(211,84,0,.07)'};border-radius:12px;padding:12px;border:1.5px solid ${syncCfg.url?'rgba(26,122,74,.2)':'rgba(211,84,0,.25)'};margin-bottom:8px">
+    <div style="font-size:.78rem;font-weight:800;color:${syncCfg.url?'var(--green)':'var(--orange)'}">
+      ${syncCfg.url?'☁️ Google Sheets sync is ON — data is safe across all phones':'⚠️ Sync not set up — data is only on this phone'}
+    </div>
+    <div style="font-size:.72rem;color:var(--muted);margin-top:3px">${syncCfg.url?'Notes and payments are automatically backed up to Google Sheets.':'Tap ⚙️ Sync in the bottom bar to set up Google Sheets backup.'}</div>
+    <button onclick="exportBackup()" style="margin-top:8px;width:100%;padding:8px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-family:\'Nunito\',sans-serif;font-size:.78rem;font-weight:800;cursor:pointer">💾 Download Backup File (send to family on WhatsApp)</button>
+  </div>
+</div>`;
+}
+
+// ═══════════════════════════════════════════════════
+// MODALS
+// ═══════════════════════════════════════════════════
+function openUpload(){document.getElementById('uploadModal').classList.add('open');renderShist()}
+function closeUpload(){document.getElementById('uploadModal').classList.remove('open')}
+function openSettings(){document.getElementById('settingsModal').classList.add('open');document.getElementById('wsUrl').value=syncCfg.url||'';document.getElementById('wsPIN').value=syncCfg.pin||''}
+function closeSettings(){document.getElementById('settingsModal').classList.remove('open')}
+
+function renderShist(){
+  document.getElementById('shist').innerHTML=sheets.length?
+    `<div class="htitle">Saved Sheets (${sheets.length})</div>`+
+    sheets.map(s=>`<div class="hrow"><span style="font-size:1.1rem">📊</span><div><div class="hname">${s.name}</div><div class="hmeta">${s.data.length} accounts</div></div>${sheets.length>1?`<button class="hdel" onclick="delSheet('${s.id}')">🗑️</button>`:''}</div>`).join(''):'';
+}
+
+function handleFile(file){if(!file)return;const r=new FileReader();r.onload=e=>{document.getElementById('csvbox').value=e.target.result;handleCSV()};r.readAsText(file)}
+
+function handleCSV(){
+  const raw=document.getElementById('csvbox').value.trim();if(!raw){alert('Please paste data first');return}
+  const lines=raw.split('\n').filter(l=>l.trim()&&!/^select/i.test(l.trim()));
+  const data=lines.map((line,i)=>{const cols=line.split(',').map(c=>c.trim().replace(/^"|"$/g,''));if(cols.length<4)return null;return{sno:parseInt(cols[0])||i+1,acct:cols[1]||'',name:cols[2]||'',amt:parseFloat(cols[3].replace(/[^0-9.]/g,''))||0,months:parseInt(cols[4])||0,openDate:cols[5]||null,dueDate:cols[6]||null}}).filter(r=>r&&r.acct);
+  if(!data.length){alert('No valid data. Format: S.No, Account No, Name, Amount, Months, Open Date, Due Date');return}
+  const name=prompt('Name for this month?',new Date().toLocaleString('en-IN',{month:'long',year:'numeric'}))||`Sheet ${sheets.length+1}`;
+  const id='s_'+Date.now();
+  sheets.push({id,name,month:TM,year:TY,added:new Date().toISOString(),data});
+  actId=id;lss(SK.sh,sheets);lss(SK.act,actId);
+  openCards.clear();closeUpload();renderChips();all();
+  alert(`✅ "${name}" loaded! ${data.length} accounts ready.`);
+}
+
+function delSheet(id){if(sheets.length<=1){alert("Can't delete the only sheet");return}if(!confirm('Remove sheet? All payment data stays.'))return;sheets=sheets.filter(s=>s.id!==id);if(actId===id)actId=sheets[0].id;lss(SK.sh,sheets);lss(SK.act,actId);renderChips();renderShist();all()}
+
+// ═══════════════════════════════════════════════════
+// BACKUP & RESTORE
+// ═══════════════════════════════════════════════════
+function exportBackup(){
+  const blob=new Blob([JSON.stringify({sheets,rec,txn,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='RD_Backup_'+todayStr()+'.json';a.click();URL.revokeObjectURL(a.href);
+}
+function restoreBackup(inp){
+  const file=inp.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=e=>{
+    try{
+      const d=JSON.parse(e.target.result);
+      if(d.sheets)sheets=d.sheets;
+      if(d.rec)rec=d.rec;
+      if(d.txn)txn=d.txn;
+      if(sheets.length)actId=sheets[sheets.length-1].id;
+      lss(SK.sh,sheets);lss(SK.rec,rec);lss(SK.txn,txn);lss(SK.act,actId);
+      closeSettings();renderChips();all();
+      alert('✅ Backup restored! All '+sheets.length+' months and payment records are back.');
+    }catch{alert('❌ Invalid backup file. Please use a file exported from this app.')}
+  };r.readAsText(file);
+}
+
+// ═══════════════════════════════════════════════════
+// PWA INSTALL
+// ═══════════════════════════════════════════════════
+let dPr;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();dPr=e;document.getElementById('ibar').style.display='flex'});
+document.getElementById('ibtn')?.addEventListener('click',async()=>{if(!dPr)return;dPr.prompt();await dPr.userChoice;dPr=null;document.getElementById('ibar').style.display='none'});
+
+// ═══════════════════════════════════════════════════
+// ALL + BOOT
+// ═══════════════════════════════════════════════════
+function all(){updateBCounts();updateStats();if(view==='home')render();else if(view==='led')renderLed();else if(view==='sum')renderSum()}
+
+document.getElementById('bt-'+activeBatch).classList.add('on');
+renderChips();
+pullAllRecords();  // Pull from Google Sheets on load (if configured)
+all();
+</script>
+</body>
+</html>
